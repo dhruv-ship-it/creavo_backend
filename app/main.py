@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from app.db.session import engine
 
 app = FastAPI(title="Creavo Backend")
 
@@ -8,4 +9,8 @@ def root():
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    try:
+        with engine.connect() as connection:
+            return {"status": "ok", "db": "connected"}
+    except Exception as e:
+        return {"status": "error", "db": "not connected"}
