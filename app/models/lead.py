@@ -17,7 +17,7 @@ class Lead(Base):
     source = Column(String(255))
     tag = Column(String(255))
     status = Column(String(255))
-    metadata = Column(JSON)
+    lead_metadata = Column(JSON)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
