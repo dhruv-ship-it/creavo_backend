@@ -4,7 +4,7 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db, get_current_user
+from app.api.deps import get_db, get_current_user, require_roles
 from app.models.user import User
 from app.models.lead import Lead
 from app.schemas.lead import LeadCreate, LeadUpdate, LeadResponse
@@ -20,7 +20,7 @@ def get_leads(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_roles(["ADMIN", "SALES"]))
 ):
     leads = db.query(Lead).offset(skip).limit(limit).all()
     return leads
@@ -32,7 +32,7 @@ def get_lead(
     request: Request,
     lead_id: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_roles(["ADMIN", "SALES"]))
 ):
     lead = db.query(Lead).filter(Lead.id == lead_id).first()
     if not lead:
@@ -49,7 +49,7 @@ def create_lead(
     request: Request,
     lead: LeadCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_roles(["ADMIN", "SALES"]))
 ):
     db_lead = Lead(
         name=lead.name,
@@ -92,7 +92,7 @@ def update_lead(
     lead_id: str,
     lead_update: LeadUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_roles(["ADMIN", "SALES"]))
 ):
     lead = db.query(Lead).filter(Lead.id == lead_id).first()
     if not lead:

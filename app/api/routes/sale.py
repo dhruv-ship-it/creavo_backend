@@ -4,7 +4,7 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db, get_current_user
+from app.api.deps import get_db, require_roles
 from app.models.user import User
 from app.models.sale import Sale
 from app.models.lead import Lead
@@ -21,7 +21,7 @@ def get_sales(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_roles(["ADMIN", "SALES"]))
 ):
     sales = db.query(Sale).offset(skip).limit(limit).all()
     return sales
@@ -33,7 +33,7 @@ def get_sale(
     request: Request,
     sale_id: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_roles(["ADMIN", "SALES"]))
 ):
     sale = db.query(Sale).filter(Sale.id == sale_id).first()
     if not sale:
@@ -50,7 +50,7 @@ def create_sale(
     request: Request,
     sale: SaleCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_roles(["ADMIN", "SALES"]))
 ):
     # Validate lead exists
     lead = db.query(Lead).filter(Lead.id == sale.lead_id).first()
@@ -80,7 +80,7 @@ def update_sale(
     sale_id: str,
     sale_update: SaleUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_roles(["ADMIN", "SALES"]))
 ):
     sale = db.query(Sale).filter(Sale.id == sale_id).first()
     if not sale:

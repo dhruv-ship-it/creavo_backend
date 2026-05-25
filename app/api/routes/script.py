@@ -4,7 +4,7 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db, get_current_user
+from app.api.deps import get_db, require_roles
 from app.models.user import User
 from app.models.script import Script
 from app.models.topic import Topic
@@ -21,7 +21,7 @@ def get_scripts(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_roles(["ADMIN", "CONTENT"]))
 ):
     scripts = db.query(Script).filter(Script.user_id == current_user.id).offset(skip).limit(limit).all()
     return scripts
@@ -33,7 +33,7 @@ def get_script(
     request: Request,
     script_id: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_roles(["ADMIN", "CONTENT"]))
 ):
     script = db.query(Script).filter(
         Script.id == script_id,
@@ -53,7 +53,7 @@ def create_script(
     request: Request,
     script: ScriptCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_roles(["ADMIN", "CONTENT"]))
 ):
     # Validate topic exists and belongs to user
     topic = db.query(Topic).filter(
@@ -86,7 +86,7 @@ def update_script(
     script_id: str,
     script_update: ScriptUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_roles(["ADMIN", "CONTENT"]))
 ):
     script = db.query(Script).filter(
         Script.id == script_id,

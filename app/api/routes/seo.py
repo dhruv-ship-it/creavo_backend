@@ -3,7 +3,7 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db, get_current_user
+from app.api.deps import get_db, require_roles
 from app.models.user import User
 from app.models.script import Script
 from app.models.seo import SEO
@@ -19,7 +19,7 @@ def get_seo(
     request: Request,
     script_id: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_roles(["ADMIN", "CONTENT"]))
 ):
     # Verify script belongs to user
     script = db.query(Script).filter(
@@ -47,7 +47,7 @@ def create_or_update_seo(
     request: Request,
     seo_data: SEOCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_roles(["ADMIN", "CONTENT"]))
 ):
     # Verify script belongs to user
     script = db.query(Script).filter(
@@ -93,7 +93,7 @@ def update_seo(
     script_id: str,
     seo_update: SEOUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_roles(["ADMIN", "CONTENT"]))
 ):
     # Verify script belongs to user
     script = db.query(Script).filter(

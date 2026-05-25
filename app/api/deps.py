@@ -49,8 +49,33 @@ async def get_current_user(
 
 
 def require_role(role: str):
+    """Legacy helper for backward compatibility - checks exact role match."""
     def role_checker(current_user: User = Depends(get_current_user)):
         if current_user.role != role:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not enough permissions"
+            )
+        return current_user
+    return role_checker
+
+
+def require_roles(allowed_roles: list[str]):
+    """
+    Flexible role checker that allows multiple roles.
+    ADMIN is automatically granted access to all routes.
+    
+    Example:
+        require_roles(["ADMIN", "CONTENT"])  # Allows ADMIN or CONTENT
+        require_roles(["ADMIN", "SALES"])    # Allows ADMIN or SALES
+    """
+    def role_checker(current_user: User = Depends(get_current_user)):
+        # ADMIN always has access to everything
+        if current_user.role == "ADMIN":
+            return current_user
+        
+        # Check if user's role is in the allowed list
+        if current_user.role not in allowed_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Not enough permissions"

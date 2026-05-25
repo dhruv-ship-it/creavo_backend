@@ -5,7 +5,8 @@ from slowapi.util import get_remote_address
 from sqlalchemy.orm import Session
 from datetime import datetime
 
-from app.api.deps import get_db
+from app.api.deps import get_db, require_roles
+from app.models.user import User
 from app.models.comment import Comment
 from app.schemas.comment import CommentCreate, CommentUpdate, CommentResponse
 
@@ -22,6 +23,7 @@ def get_comments_by_video(
     limit: int = 100,
     db: Session = Depends(get_db)
 ):
+    """Public endpoint - anyone can view comments for a video."""
     comments = db.query(Comment).filter(
         Comment.video_id == video_id
     ).offset(skip).limit(limit).all()
@@ -35,6 +37,7 @@ def create_comment(
     comment: CommentCreate,
     db: Session = Depends(get_db)
 ):
+    """Public endpoint - anyone can create a comment."""
     db_comment = Comment(
         video_id=comment.video_id,
         body=comment.body,
@@ -53,7 +56,8 @@ def reply_to_comment(
     request: Request,
     comment_id: str,
     reply_data: CommentUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles(["ADMIN", "CONTENT"]))
 ):
     comment = db.query(Comment).filter(Comment.id == comment_id).first()
     if not comment:
@@ -83,7 +87,8 @@ def update_comment(
     request: Request,
     comment_id: str,
     comment_update: CommentUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles(["ADMIN", "CONTENT"]))
 ):
     comment = db.query(Comment).filter(Comment.id == comment_id).first()
     if not comment:

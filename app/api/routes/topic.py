@@ -4,7 +4,7 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db, get_current_user
+from app.api.deps import get_db, require_roles
 from app.models.user import User
 from app.models.topic import Topic
 from app.schemas.topic import TopicCreate, TopicUpdate, TopicResponse
@@ -20,7 +20,7 @@ def get_topics(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_roles(["ADMIN", "CONTENT"]))
 ):
     topics = db.query(Topic).filter(Topic.user_id == current_user.id).offset(skip).limit(limit).all()
     return topics
@@ -32,7 +32,7 @@ def get_topic(
     request: Request,
     topic_id: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_roles(["ADMIN", "CONTENT"]))
 ):
     topic = db.query(Topic).filter(
         Topic.id == topic_id,
@@ -52,7 +52,7 @@ def create_topic(
     request: Request,
     topic: TopicCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_roles(["ADMIN", "CONTENT"]))
 ):
     db_topic = Topic(
         title=topic.title,
@@ -73,7 +73,7 @@ def update_topic(
     topic_id: str,
     topic_update: TopicUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_roles(["ADMIN", "CONTENT"]))
 ):
     topic = db.query(Topic).filter(
         Topic.id == topic_id,
@@ -100,7 +100,7 @@ def delete_topic(
     request: Request,
     topic_id: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_roles(["ADMIN", "CONTENT"]))
 ):
     topic = db.query(Topic).filter(
         Topic.id == topic_id,
